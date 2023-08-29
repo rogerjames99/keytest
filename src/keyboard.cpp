@@ -38,8 +38,9 @@ void CKeyboard::scan()
 
     bool matrix_changed = false;
 
-    //if (key_scan_interval > KEY_SCAN_INTERVAL_MS)
+    if (key_scan_interval > KEY_SCAN_INTERVAL_MS)
     {
+    //    digitalWrite(SCAN_IN_PROGRESS_DIAGNOSTIC_LINE, 1);
         for (uint8_t matrix_column = 0; matrix_column < 8; matrix_column++)
         {
             // Set up the keyboard scan address
@@ -53,20 +54,15 @@ void CKeyboard::scan()
             // Wait for the switch matrix to settle
             delayMicroseconds(10);
             
-            digitalWrite(SCAN_IN_PROGRESS_DIAGNOSTIC_LINE, 1);
             // Read the input lines
             for (uint8_t matrix_row = 0; matrix_row < 6; matrix_row++)
             {
-                // Doing this the easy way gives an obscure compiler warning
-                // current_keyboard_matrix[matrix_row][matrix_column] = ~digitalRead(input_lines[matrix_row]);
-                current_keyboard_matrix[matrix_row][matrix_column] = digitalRead(input_lines[matrix_row]) == 0 ? true : false;
+                current_keyboard_matrix[matrix_row][matrix_column] = !bool(digitalRead(input_lines[matrix_row]));
                 /*Log.verbose("Keyboard scan read matrix_row %d  matrix_column %d result %s\n",
                             matrix_row,
                             matrix_column,
                             current_keyboard_matrix[matrix_row][matrix_column] ? "true" : "false");*/
             }
-            delayMicroseconds(10);
-            digitalWrite(SCAN_IN_PROGRESS_DIAGNOSTIC_LINE, 0);
         }
 
         for (uint8_t matrix_column = 0; matrix_column < 8; matrix_column++)
@@ -99,57 +95,6 @@ void CKeyboard::scan()
             }
         }
 
-/*
-        // The following to scans are done separately to ensure that all the voices that are currently playing
-        // are released back to the free pool before any new notes are added.
-
-        // 1. Scan the keyboard matrix for switches that have been released
-        for (uint8_t matrix_column = 0; matrix_column < 8; matrix_column++)
-        {
-            for (uint8_t matrix_row = 0; matrix_row < 6; matrix_row++)
-            {
-                if ((current_keyboard_matrix[matrix_row][matrix_column] != previous_keyboard_matrix[matrix_row][matrix_column]) &&
-                    (current_keyboard_matrix[matrix_row][matrix_column] == false))
-                {
-                    Log.verbose("Keyboard scan release matrix_row %d  matrix_column %d current %s previous %s\n",
-                            matrix_row,
-                            matrix_column,
-                            current_keyboard_matrix[matrix_row][matrix_column] ? "true" : "false",
-                            previous_keyboard_matrix[matrix_row][matrix_column] ? "true" : "false");
-                    // The switch button is now released
-    #ifdef ENABLE_AUDIO
-                    CVoice::release(matrix_row, matrix_column);
-    #endif
-                    // Update previous_keyboard_matrix
-                    previous_keyboard_matrix[matrix_row][matrix_column] = current_keyboard_matrix[matrix_row][matrix_column];
-                }
-            }
-
-        }
-        
-        // 2. Scan the keyboard matrix for switches that have been pressed
-        for (uint8_t matrix_column = 0; matrix_column < 8; matrix_column++)
-        {
-            for (uint8_t matrix_row = 0; matrix_row < 6; matrix_row++)
-            {
-                if ((current_keyboard_matrix[matrix_row][matrix_column] != previous_keyboard_matrix[matrix_row][matrix_column]) &&
-                    (current_keyboard_matrix[matrix_row][matrix_column] == true))
-                {
-                    Log.verbose("Keyboard scan press matrix_row %d  matrix_column %d current %s previous %s\n",
-                            matrix_row,
-                            matrix_column,
-                            current_keyboard_matrix[matrix_row][matrix_column] ? "true" : "false",
-                            previous_keyboard_matrix[matrix_row][matrix_column] ? "true" : "false");
-                    // The switch button is now pressed
-    #ifdef ENABLE_AUDIO
-                    CVoice::press(matrix_row, matrix_column, Bellows());
-    #endif
-                    // Update previous_keyboard_matrix
-                    previous_keyboard_matrix[matrix_row][matrix_column] = current_keyboard_matrix[matrix_row][matrix_column];
-                }
-            }
-        }
-        */
-        //key_scan_interval = key_scan_interval - KEY_SCAN_INTERVAL_MS;
+        key_scan_interval = key_scan_interval - KEY_SCAN_INTERVAL_MS;
     }
 }
