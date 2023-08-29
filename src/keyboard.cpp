@@ -36,7 +36,9 @@ void CKeyboard::scan()
     const uint8_t output_lines[] = {24, 25, 26};
     const uint8_t input_lines[] = {32, 31, 30, 29, 28, 27};
 
-    if (key_scan_interval > KEY_SCAN_INTERVAL_MS)
+    bool matrix_changed = false;
+
+    //if (key_scan_interval > KEY_SCAN_INTERVAL_MS)
     {
         for (uint8_t matrix_column = 0; matrix_column < 8; matrix_column++)
         {
@@ -46,11 +48,10 @@ void CKeyboard::scan()
                 uint8_t bit = (matrix_column >> line_index) & 1;
                 //Log.verbose("Keyboard scan setup matrix_column %d line_index %d line %d bit %d\n", matrix_column, line_index, output_lines[line_index], bit);
                 digitalWrite(output_lines[line_index], bit);
-                delayMicroseconds(10);
             }
 
             // Wait for the switch matrix to settle
-            //delayMicroseconds(10);
+            delayMicroseconds(10);
             
             digitalWrite(SCAN_IN_PROGRESS_DIAGNOSTIC_LINE, 1);
             // Read the input lines
@@ -68,6 +69,37 @@ void CKeyboard::scan()
             digitalWrite(SCAN_IN_PROGRESS_DIAGNOSTIC_LINE, 0);
         }
 
+        for (uint8_t matrix_column = 0; matrix_column < 8; matrix_column++)
+        {
+            for (uint8_t matrix_row = 0; matrix_row < 6; matrix_row++)
+            {
+                if (current_keyboard_matrix[matrix_row][matrix_column] !=
+                        previous_keyboard_matrix[matrix_row][matrix_column])
+                {
+                    previous_keyboard_matrix[matrix_row][matrix_column] = current_keyboard_matrix[matrix_row][matrix_column];
+                    matrix_changed = true;
+                }
+            }
+        }
+
+        if (matrix_changed)
+        {
+            Log.verbose("current_keyboard_matrix\n");
+            for (uint8_t matrix_row = 0; matrix_row < 6; matrix_row++)
+            {
+                Log.verbose("%d %d %d %d %d %d %d %d\n",
+                    current_keyboard_matrix[matrix_row][0],
+                    current_keyboard_matrix[matrix_row][1],
+                    current_keyboard_matrix[matrix_row][2],
+                    current_keyboard_matrix[matrix_row][3],
+                    current_keyboard_matrix[matrix_row][4],
+                    current_keyboard_matrix[matrix_row][5],
+                    current_keyboard_matrix[matrix_row][6],
+                    current_keyboard_matrix[matrix_row][7]);
+            }
+        }
+
+/*
         // The following to scans are done separately to ensure that all the voices that are currently playing
         // are released back to the free pool before any new notes are added.
 
@@ -117,6 +149,7 @@ void CKeyboard::scan()
                 }
             }
         }
-        key_scan_interval = key_scan_interval - KEY_SCAN_INTERVAL_MS;
+        */
+        //key_scan_interval = key_scan_interval - KEY_SCAN_INTERVAL_MS;
     }
 }
