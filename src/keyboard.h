@@ -18,7 +18,7 @@ public:
     static CKeyboard *getInstance();
     void scan();
 protected:
-    const uint16_t KEY_SCAN_INTERVAL_MS = 100;
+    const uint16_t KEY_SCAN_INTERVAL_MS = 5000;
     elapsedMillis key_scan_interval;
     /** @typedef
      * The keyboard matrix type is used the hold the state of the keyboards.
